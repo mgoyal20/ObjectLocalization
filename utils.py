@@ -8,19 +8,19 @@ plt.switch_backend('agg')
 
 def getdata():
     # read data and shuffle
-    index = [i for i in range(14000)]
+    index = [i for i in range(47997)]
     random.shuffle(index)
 
     f = open("./id_to_data", "rb+")
     data = pickle.load(f)
     data = data[index]
-    data_train = data[0:14000]
-    data_test = data[14000:]
+    data_train = data[0:47997]
+    data_test = data[45000:]
     f = open("./id_to_box", "rb+")
     box = pickle.load(f)
     box = box[index]
-    box_train = box[0:14000]
-    box_test = box[14000:]
+    box_train = box[0:47997]
+    box_test = box[45000:]
     return data_train, box_train, data_test, box_test
 
 

@@ -1,5 +1,5 @@
 import keras
-from keras.layers import Dense, Conv2D, BatchNormalization, Activation
+from keras.layers import Dense, Conv2D, BatchNormalization, Activation, Dropout
 from keras.layers import AveragePooling2D, MaxPooling2D, Input, Flatten
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -119,6 +119,7 @@ def resnet18():
 
     y = Flatten()(x)
     # out:512
+    # y = Dropout(0.5)(y)
     y = Dense(1000, kernel_initializer='he_normal', kernel_regularizer=l2(1e-3))(y)
     outputs = Dense(4, kernel_initializer='he_normal', kernel_regularizer=l2(1e-3))(y)
 
@@ -138,13 +139,15 @@ def lr_sch(epoch):
 
 def main():
     model = resnet18()
+    # model.load_weights('model.h5', by_name=True)
     model.compile(loss=smooth_l1_loss, optimizer=Adam(), metrics=[my_metric])
     model.summary()
     lr_scheduler = LearningRateScheduler(lr_sch)
     lr_reducer = ReduceLROnPlateau(monitor='val_my_metric', factor=0.2, patience=5, mode='max', min_lr=1e-3)
+    early = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=1e-4, patience=10, mode='auto')
     checkpoint = ModelCheckpoint('model.h5', monitor='val_loss', verbose=0, save_best_only=True, mode='auto')
-    model_details = model.fit(data_train, box_train, batch_size=128, epochs=10, shuffle=True, validation_split=0.1,
-                          callbacks=[lr_scheduler, lr_reducer, checkpoint], verbose=1)
+    model_details = model.fit(data_train, box_train, batch_size=16, epochs=200, shuffle=True, validation_split=0.01,
+                              callbacks=[lr_scheduler, lr_reducer, early, checkpoint], verbose=1)
     model.save('model.h5')
     scores = model.evaluate(data_test, box_test, verbose=1)
     print('Test loss : ', scores[0])

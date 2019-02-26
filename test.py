@@ -14,14 +14,14 @@ def main():
     id_to_test_data = {}
     id_to_test_size = {}
     test_images = {}
-    path = "./data/images/1-1.png"
+    path = "./images/1-1.png"
 
     with open("./data/test.csv", 'r') as f:
         id = 1
         csv_reader = csv.DictReader(f)
         for row in csv_reader:
             try:
-                image = Image.open("./data/images/" + row["image_name"]).convert('RGB')
+                image = Image.open("./images/" + row["image_name"]).convert('RGB')
             except:
                 image = Image.open(path).convert('RGB')
             test_images[int(id)] = str(row["image_name"])
@@ -37,7 +37,7 @@ def main():
     size = np.array(list(id_to_test_size.values()))
     images = np.array(list(test_images.values()))
 
-    index = [i for i in range(12815)]
+    index = [i for i in range(24045)]
 
     keras.losses.smooth_l1_loss = smooth_l1_loss
     keras.metrics.my_metric = my_metric
@@ -57,8 +57,22 @@ def main():
         image = image * 255
         image = image.astype(np.uint8)
         plt.imshow(image)
-        final_list.append([images[i], prediction[0] * size[i][1], (prediction[0] + prediction[2]) * size[i][1],
-                           prediction[1] * size[i][0], (prediction[1] + prediction[3]) * size[i][0]])
+
+        temp1 = prediction[0] * size[i][1]
+        temp2 = (prediction[0] + prediction[2]) * size[i][1]
+        temp3 = prediction[1] * size[i][0]
+        temp4 = (prediction[1] + prediction[3]) * size[i][0]
+
+        if temp1 < 0:
+            temp1 = 0.0
+        if temp2 > 640:
+            temp2 = 640.0
+        if temp3 < 0:
+            temp3 = 0.0
+        if temp4 > 480:
+            temp4 = 480.0
+
+        final_list.append([images[i], int(temp1), int(temp2), int(temp3), int(temp4)])
 
     with open('resultsFinal.csv', 'w', newline='') as f:
         writer = csv.writer(f)
